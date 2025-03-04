@@ -18,7 +18,7 @@ from components.visualizations import (
 
 def show_testing():
     """Show New Feature Testing page"""
-    st.subheader("New Feature Testing")
+    st.subheader("Exploratory Data Analysis (EDA)")
     
     # Get dataframe from the uploader (which uses session state)
     df = beer_data_uploader()
