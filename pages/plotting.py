@@ -1,18 +1,18 @@
 import streamlit as st
 import pandas as pd
 
-from utils.data_loader import load_data
+from utils.data_loader import beer_data_uploader
 
 def show_plotting():
     """Show Data Visualization page"""
     st.subheader("Data Visualization")
     
     # File uploader
-    data = st.file_uploader("Upload Dataset", type=["csv", "xlsx", "xls"])
+    df = beer_data_uploader()
     
-    if data is not None:
+    if df is not None:
         # Load data
-        df = load_data(data)
+        # df = beer_data_uploader()
         
         if df is not None:
             # Show data preview

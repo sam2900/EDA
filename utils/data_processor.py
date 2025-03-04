@@ -82,3 +82,51 @@ def get_numeric_columns(df):
         return []
         
     return df.select_dtypes(include=[np.number]).columns.tolist()
+
+def detect_column_types(df):
+    """
+    Automatically detect categorical and numerical columns in a DataFrame
+    
+    Parameters:
+    -----------
+    df : pandas.DataFrame
+        Input DataFrame to analyze column types
+    
+    Returns:
+    --------
+    tuple
+        A tuple containing two lists: (categorical_columns, numeric_columns)
+    """
+    # Import required libraries
+    import numpy as np
+    import pandas as pd
+
+    # Check for input validity
+    if df is None or df.empty:
+        return [], []
+
+    # Detect column types
+    categorical_columns = []
+    numeric_columns = []
+
+    for col in df.columns:
+        # Get the column's data type
+        dtype = df[col].dtype
+
+        # Check for categorical conditions
+        is_categorical = (
+            # Object/string columns
+            dtype == 'object' or 
+            # Columns with few unique values relative to total rows
+            (df[col].nunique() < len(df) * 0.1) or 
+            # Boolean columns
+            dtype == 'bool'
+        )
+
+        # Columns that are not categorical are considered numeric
+        if is_categorical:
+            categorical_columns.append(col)
+        elif pd.api.types.is_numeric_dtype(df[col]):
+            numeric_columns.append(col)
+
+    return categorical_columns, numeric_columns

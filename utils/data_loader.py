@@ -177,7 +177,7 @@ def load_beer_data(uploaded_file, sheet_name="2-Beer", skiprows=8):
     
 
 def beer_data_uploader():
-    st.subheader("Upload Beer Data")
+    st.subheader("Upload Data")
     
     # Initialize session state variables if they don't exist
     if 'beer_df' not in st.session_state:

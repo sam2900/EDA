@@ -2,11 +2,12 @@
 import streamlit as st
 
 # Import page modules
-from pages.eda import show_eda
+# from pages.eda import show_eda
 from pages.plotting import show_plotting
 from pages.modeling import show_modeling
-from pages.testing import show_testing
+from pages.eda import show_testing
 from pages.about import show_about
+from app2 import kmc
 
 def main():
     """Enablers of Confidence - Modular Streamlit App"""
@@ -15,18 +16,19 @@ def main():
     st.title("Enablers of Confidence")
     
     # Sidebar navigation
-    activities = ["EDA", "Plot", "Model Building", "Testing", "About"]
+    activities = ["EDA", "Plot", "Model Building", "About"]
     choice = st.sidebar.selectbox("Select Activity", activities)
     
     # Display the selected page
     if choice == 'EDA':
-        show_eda()
+        # show_eda()
+        show_testing()
     elif choice == 'Plot':
         show_plotting()
     elif choice == 'Model Building':
-        show_modeling()
-    elif choice == 'Testing':
-        show_testing()
+        kmc()
+    # elif choice == 'Testing':
+    #     show_testing()
     elif choice == 'About':
         show_about()
 
