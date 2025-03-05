@@ -32,5 +32,9 @@ def main():
     elif choice == 'About':
         show_about()
 
+    activities = ["Linear Regression", "Multiple Regression", "Logistic Regression", "Time Series Forecasting","K-Means Clustering","Decision Trees","Random Forest"]
+    choice = st.sidebar.selectbox("Modelling", activities)
+
+
 if __name__ == '__main__':
     main()
