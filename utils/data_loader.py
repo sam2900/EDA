@@ -176,6 +176,52 @@ def load_beer_data(uploaded_file, sheet_name="2-Beer", skiprows=8):
         return None
     
 
+# def beer_data_uploader():
+
+#     st.subheader("Upload Data")
+    
+#     # Initialize session state variables if they don't exist
+#     if 'beer_df' not in st.session_state:
+#         st.session_state.beer_df = None
+    
+#     with st.expander("Upload Settings", expanded=True):
+#         # File uploader
+#         uploaded_file = st.file_uploader("Choose a file", type=["csv", "xlsx", "xls"], key="beer_file_uploader")
+        
+#         # Only show Excel settings if an Excel file is uploaded
+#         if uploaded_file is not None and uploaded_file.name.endswith(('.xlsx', '.xls')):
+#             # Two columns for the settings
+#             col1, col2 = st.columns(2)
+            
+#             with col1:
+#                 sheet_name = st.text_input("Sheet Name", value="2-Beer", 
+#                                            help="Name of the sheet in the Excel file")
+            
+#             with col2:
+#                 skiprows = st.number_input("Skip Rows", value=8, min_value=0,
+#                                           help="Number of header rows to skip")
+                
+#             # Upload button
+#             if st.button("Load Data", key="load_excel_btn"):
+#                 # Load the data and store in session state
+#                 st.session_state.beer_df = load_beer_data(uploaded_file, sheet_name, skiprows)
+#                 if st.session_state.beer_df is not None:
+#                     st.success(f"Data loaded successfully! {len(st.session_state.beer_df)} rows and {len(st.session_state.beer_df.columns)} columns.")
+#                     st.dataframe(st.session_state.beer_df.head())
+                
+#         elif uploaded_file is not None and uploaded_file.name.endswith('.csv'):
+#             # For CSV files, just show the load button
+#             if st.button("Load Data", key="load_csv_btn"):
+#                 # Load the data and store in session state
+#                 st.session_state.beer_df = load_beer_data(uploaded_file)
+#                 if st.session_state.beer_df is not None:
+#                     st.success(f"Data loaded successfully! {len(st.session_state.beer_df)} rows and {len(st.session_state.beer_df.columns)} columns.")
+#                     st.dataframe(st.session_state.beer_df.head())
+    
+#     # Return the dataframe from session state
+#     return st.session_state.beer_df
+
+
 def beer_data_uploader():
     st.subheader("Upload Data")
     
@@ -189,12 +235,17 @@ def beer_data_uploader():
         
         # Only show Excel settings if an Excel file is uploaded
         if uploaded_file is not None and uploaded_file.name.endswith(('.xlsx', '.xls')):
+            # Get all sheet names from the Excel file
+            excel_file = pd.ExcelFile(uploaded_file)
+            sheet_names = excel_file.sheet_names
+            
             # Two columns for the settings
             col1, col2 = st.columns(2)
             
             with col1:
-                sheet_name = st.text_input("Sheet Name", value="2-Beer", 
-                                           help="Name of the sheet in the Excel file")
+                # Replace text input with a dropdown of available sheets
+                sheet_name = st.selectbox("Select Sheet", options=sheet_names, 
+                                          help="Choose a sheet from the Excel file")
             
             with col2:
                 skiprows = st.number_input("Skip Rows", value=8, min_value=0,
