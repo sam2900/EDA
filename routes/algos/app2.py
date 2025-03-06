@@ -18,9 +18,6 @@ from utils.data_processor import detect_column_types
 
 def kmc():
 
-    # Set page config
-    # st.set_page_config(page_title="Beer Sales Clustering Analysis", layout="wide")
-
     # App title and description
     st.title("Clustering Analysis")
     st.markdown("""
@@ -541,6 +538,8 @@ def kmc():
 
         st.markdown("""
         ### What This App Does
+                """)
+        st.info("""
 
         1. **Data Preprocessing**:
            - Handles missing values

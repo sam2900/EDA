@@ -19,7 +19,8 @@ from components.visualizations import (
 def show_testing():
     """Show New Feature Testing page"""
     st.subheader("Exploratory Data Analysis (EDA)")
-    
+    activities = ["Home","Bivariate Analysis","Multi-variate Analysis"]
+    choice = st.sidebar.selectbox("EDA", activities)
     # Get dataframe from the uploader (which uses session state)
     df = beer_data_uploader()
     

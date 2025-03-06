@@ -106,7 +106,7 @@ def load_data(uploaded_file):
     
 #     with st.expander("Upload Settings", expanded=True):
 #         # File uploader
-#         uploaded_file = st.file_uploader("Choose a file", type=["csv", "xlsx", "xls"])
+
         
 #         # Only show Excel settings if an Excel file is uploaded
 #         if uploaded_file is not None and uploaded_file.name.endswith(('.xlsx', '.xls')):
