@@ -267,7 +267,7 @@ def perform_bivariate_analysis(analysis_df):
     
     # Get numeric and categorical columns
     numeric_columns = get_numeric_columns(analysis_df)
-    categorical_columns = [col for col in analysis_df.columns if col not in numeric_columns]
+    categorical_columns = [col for col in analysis_df.columns]
     
     # Column selection for bivariate analysis
     st.write("Select columns for analysis:")
@@ -314,7 +314,8 @@ def perform_multivariate_analysis(analysis_df):
     
     # Get numeric and categorical columns
     numeric_columns = get_numeric_columns(analysis_df)
-    categorical_columns = [col for col in analysis_df.columns if col not in numeric_columns]
+    # categorical_columns = [col for col in analysis_df.columns if col not in numeric_columns]
+    categorical_columns = [col for col in analysis_df.columns]
     
     # Column selection for multivariate analysis
     st.write("Select columns for pairplot:")
