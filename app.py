@@ -6,7 +6,7 @@ from routes.plotting import show_plotting
 from routes.modelling import show_modelling
 from routes.eda import show_testing
 from routes.about import show_about
-from dataPro import show_data_processing
+from kmcnew import kmc
 
 
 def main():
@@ -32,7 +32,7 @@ def main():
     elif choice == 'About':
         show_about()
     elif choice == 'Testing':
-        show_data_processing()
+        kmc()
 
 
         
