@@ -6,7 +6,7 @@ from routes.plotting import show_plotting
 from routes.modelling import show_modelling
 from routes.eda import show_testing
 from routes.about import show_about
-
+from dataPro import show_data_processing
 
 
 def main():
@@ -16,7 +16,7 @@ def main():
     st.title("Enablers of Confidence")
     
     # Sidebar navigation
-    activities = ["About","EDA", "Plot", "Model Building"]
+    activities = ["About","EDA", "Plot", "Model Building","Testing"]
     choice = st.sidebar.selectbox("Select Activity", activities)
     
     # Display the selected page
@@ -31,6 +31,9 @@ def main():
     #     show_testing()
     elif choice == 'About':
         show_about()
+    elif choice == 'Testing':
+        show_data_processing()
+
 
         
 if __name__ == '__main__':

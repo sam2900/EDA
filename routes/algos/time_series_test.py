@@ -244,6 +244,14 @@ def time_series_forecasting():
                         
                         model_fit = model.fit()
                         
+                        # Store the model fit in session state to use it later
+                        st.session_state.model_fit = model_fit
+                        st.session_state.time_series = time_series
+                        st.session_state.p = p
+                        st.session_state.d = d
+                        st.session_state.q = q
+                        st.session_state.target_col = target_col
+            
                         # Display model summary
                         st.write("#### Model Summary")
                         model_summary = model_fit.summary().tables[1].as_html()
@@ -287,18 +295,22 @@ def time_series_forecasting():
                             1, 365, 30
                         )
                         
-                        # Generate forecast
-                        forecast = model_fit.forecast(steps=forecast_periods)
+                        # Generate forecast and get prediction intervals
+                        forecast_result = model_fit.get_forecast(steps=forecast_periods)
+                        forecast = forecast_result.predicted_mean
+                        pred_interval = forecast_result.conf_int()
+                        lower_bound = pred_interval.iloc[:, 0]  # Lower bound
+                        upper_bound = pred_interval.iloc[:, 1]  # Upper bound
 
-
-                        # Get prediction intervals manually
+                    
+                        # # Get prediction intervals manually
                         
-                        alpha = 0.05  # 95% confidence interval
-                        forecast_var = model_fit.forecast_variance(steps=forecast_periods)
-                        forecast_std = np.sqrt(forecast_var)
-                        critical_value = stats.norm.ppf(1 - alpha/2)  # For 95% CI
-                        lower_bound = forecast - critical_value * forecast_std
-                        upper_bound = forecast + critical_value * forecast_std
+                        # alpha = 0.05  # 95% confidence interval
+                        # forecast_var = model_fit.forecast_variance(steps=forecast_periods)
+                        # forecast_std = np.sqrt(forecast_var)
+                        # critical_value = stats.norm.ppf(1 - alpha/2)  # For 95% CI
+                        # lower_bound = forecast - critical_value * forecast_std
+                        # upper_bound = forecast + critical_value * forecast_std
                         
                         # Create forecast index
                         last_date = time_series.index[-1]
@@ -388,6 +400,7 @@ def time_series_forecasting():
                             mime="text/csv"
                         )
                         
+                        
                         # Model evaluation
                         st.subheader("Model Evaluation")
                         
@@ -403,6 +416,185 @@ def time_series_forecasting():
                     except Exception as e:
                         st.error(f"Error fitting ARIMA model: {e}")
                         st.info("Tips: Try different p, d, q values or check if your data is appropriate for ARIMA modeling.")
+
+            if 'model_fit' in st.session_state:
+
+            #rolling forecast
+                st.subheader("Rolling Forecast Validation")
+
+                # Ask user if they want to perform rolling forecast validation
+                perform_rolling = st.checkbox("Perform Rolling Forecast Validation")
+                if perform_rolling and st.button("Run Rolling Validation"):
+                    with st.spinner("Performing rolling forecast validation..."):
+                        try:
+
+                            time_series = st.session_state.time_series
+                            model_fit = st.session_state.model_fit
+                            p = st.session_state.p
+                            d = st.session_state.d
+                            q = st.session_state.q
+                            target_col = st.session_state.target_col
+                            # User inputs for rolling forecast
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                train_percentage = st.slider("Initial training set size (%)", 50, 95, 70)
+                                step_size = st.slider("Forecast step size", 1, 10, 1)
+                            with col2:
+                                forecast_horizon = st.slider("Forecast horizon for each step", 1, 30, 1)
+                                refit_window = st.radio("Refit strategy", ["Expanding Window", "Sliding Window"])
+
+                            # Calculate the initial training size
+                            train_size = int(len(time_series) * train_percentage / 100)
+
+                            # Prepare for rolling forecast
+                            history = time_series[:train_size].copy()
+                            test = time_series[train_size:].copy()
+
+                            # Skip if test set is too small
+                            if len(test) < 5:
+                                st.warning("Test set is too small for meaningful validation. Consider using a larger dataset or smaller training percentage.")
+                            else:
+                                predictions = []
+                                confidence_intervals = []
+                                actual_values = []
+                                dates = []
+
+                                # Track start time to show progress
+                                start_time = pd.Timestamp.now()
+
+                                # Progress bar
+                                progress_bar = st.progress(0)
+
+                                # Loop through test set in steps
+                                for i in range(0, len(test), step_size):
+                                    # Update progress
+                                    progress = int((i / len(test)) * 100)
+                                    progress_bar.progress(progress)
+
+                                    # Get actual test values for this step
+                                    actual = test[i:i+step_size]
+                                    if len(actual) == 0:
+                                        break
+                                    
+                                    # Fit model on current history
+                                    roll_model = ARIMA(history, order=(p, d, q))
+                                    roll_results = roll_model.fit()
+
+                                    # Forecast
+                                    forecast_result = roll_results.get_forecast(steps=min(forecast_horizon, len(actual)))
+                                    forecast_mean = forecast_result.predicted_mean
+                                    forecast_ci = forecast_result.conf_int()
+
+                                    # Store results
+                                    predictions.extend(forecast_mean.values)
+                                    lower_ci = forecast_ci.iloc[:, 0].values
+                                    upper_ci = forecast_ci.iloc[:, 1].values
+
+                                    for j in range(len(forecast_mean)):
+                                        if i+j < len(test):
+                                            confidence_intervals.append((lower_ci[j], upper_ci[j]))
+                                            actual_values.append(actual.iloc[j])
+                                            dates.append(actual.index[j])
+
+                                    # Update history based on window type
+                                    if refit_window == "Expanding Window":
+                                        # Add actual values to history (expanding window)
+                                        history = pd.concat([history, actual])
+                                    else:
+                                        # Move the window forward (sliding window)
+                                        history = pd.concat([history, actual]).iloc[len(actual):]
+
+                                # Complete the progress bar
+                                progress_bar.progress(100)
+
+                                # Create DataFrame with results
+                                results_df = pd.DataFrame({
+                                    'Date': dates,
+                                    'Actual': actual_values,
+                                    'Predicted': predictions[:len(actual_values)],
+                                    'Lower Bound': [ci[0] for ci in confidence_intervals],
+                                    'Upper Bound': [ci[1] for ci in confidence_intervals]
+                                })
+
+                                # Calculate error metrics
+                                results_df['Error'] = results_df['Actual'] - results_df['Predicted']
+                                results_df['Absolute Error'] = abs(results_df['Error'])
+                                results_df['Squared Error'] = results_df['Error'] ** 2
+                                results_df['Percentage Error'] = (results_df['Error'] / results_df['Actual']) * 100
+
+                                # Display results
+                                st.write("#### Rolling Forecast Results")
+                                st.dataframe(results_df)
+
+                                # Calculate and display performance metrics
+                                mae = results_df['Absolute Error'].mean()
+                                rmse = np.sqrt(results_df['Squared Error'].mean())
+                                mape = results_df['Percentage Error'].abs().mean()
+
+                                metrics_df = pd.DataFrame({
+                                    'Metric': ['Mean Absolute Error (MAE)', 'Root Mean Squared Error (RMSE)', 'Mean Absolute Percentage Error (MAPE)'],
+                                    'Value': [mae, rmse, mape]
+                                })
+                                st.table(metrics_df.set_index('Metric'))
+
+                                # Plot results
+                                fig = go.Figure()
+
+                                # Plot actual values
+                                fig.add_trace(go.Scatter(
+                                    x=results_df['Date'],
+                                    y=results_df['Actual'],
+                                    mode='lines',
+                                    name='Actual',
+                                    line=dict(color='blue')
+                                ))
+
+                                # Plot predicted values
+                                fig.add_trace(go.Scatter(
+                                    x=results_df['Date'],
+                                    y=results_df['Predicted'],
+                                    mode='lines',
+                                    name='Predicted',
+                                    line=dict(color='red')
+                                ))
+
+                                # Add confidence intervals
+                                fig.add_trace(go.Scatter(
+                                    x=results_df['Date'].tolist() + results_df['Date'].tolist()[::-1],
+                                    y=results_df['Upper Bound'].tolist() + results_df['Lower Bound'].tolist()[::-1],
+                                    fill='toself',
+                                    fillcolor='rgba(231,107,243,0.2)',
+                                    line=dict(color='rgba(255,255,255,0)'),
+                                    name='95% Confidence Interval'
+                                ))
+
+                                fig.update_layout(
+                                    title=f"Rolling Forecast ARIMA({p},{d},{q}) Results",
+                                    xaxis_title="Date",
+                                    yaxis_title=target_col,
+                                    hovermode="x unified"
+                                )
+
+                                st.plotly_chart(fig)
+
+                                # Download results
+                                csv = results_df.to_csv(index=False)
+                                st.download_button(
+                                    label="Download Rolling Forecast Results as CSV",
+                                    data=csv,
+                                    file_name="rolling_forecast_results.csv",
+                                    mime="text/csv"
+                                )
+
+                                # Elapsed time
+                                elapsed_time = (pd.Timestamp.now() - start_time).total_seconds()
+                                st.info(f"Rolling forecast completed in {elapsed_time:.2f} seconds.")
+
+                        except Exception as e:
+                            st.error(f"Error in rolling forecast: {e}")
+                            st.info("Try different model parameters or check if your data is suitable for rolling forecast validation.")
+
+            
     else:
         # Information about the page when no data is uploaded
         st.info("""
