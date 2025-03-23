@@ -19,9 +19,9 @@ def show_data_processing():
         st.success("Data loaded successfully! Now you can process and clean your data.")
         
         # Create tabs for different data processing operations
-        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-            "Overview", "Missing Values", "Column Operations", 
-            "Filtering", "Duplicates", "Data Transformation", "Download"
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7,tab8 = st.tabs([
+           "Overview", "Missing Values", "Column Operations", 
+    "Filtering", "Duplicates", "Outliers", "Data Transformation", "Download"
         ])
         
         # Initialize session state to store the processed dataframe
@@ -439,20 +439,97 @@ def show_data_processing():
             st.dataframe(st.session_state.processed_df.head(10))
             st.info(f"Current number of rows: {len(st.session_state.processed_df)}")
         
+        # # Tab 5: Duplicates
+        # with tab5:
+        #     st.header("Duplicate Handling")
+            
+        #     # Check for duplicates
+        #     st.subheader("Duplicate Rows Analysis")
+            
+        #     # Select columns to consider for duplicates
+        #     dup_cols = st.multiselect(
+        #         "Select columns to check for duplicates (leave empty to check all columns)",
+        #         options=st.session_state.processed_df.columns,
+        #         default=[]
+        #     )
+            
+        #     if st.button("Find Duplicates"):
+        #         if not dup_cols:
+        #             dup_mask = st.session_state.processed_df.duplicated(keep='first')
+        #             dups = st.session_state.processed_df[dup_mask]
+        #         else:
+        #             dup_mask = st.session_state.processed_df.duplicated(subset=dup_cols, keep='first')
+        #             dups = st.session_state.processed_df[dup_mask]
+                
+        #         # Store duplicates in session state for later use
+        #         st.session_state.duplicate_rows = dups
+        #         st.session_state.duplicate_columns = dup_cols
+                
+        #         if len(dups) > 0:
+        #             st.warning(f"Found {len(dups)} duplicate rows!")
+        #             st.dataframe(dups)
+                    
+        #             # Actions for duplicates
+        #             st.subheader("Handle Duplicates")
+                    
+        #             dup_action = st.radio(
+        #                 "What would you like to do with duplicates?",
+        #                 ["Remove duplicates (keep first)", "Remove duplicates (keep last)", 
+        #                  "Remove all instances of duplicates", "View duplicates only"]
+        #             )
+                    
+        #             if st.button("Apply Duplicate Action"):
+        #                 if dup_action == "Remove duplicates (keep first)":
+        #                     if not dup_cols:
+        #                         st.session_state.processed_df = st.session_state.processed_df.drop_duplicates(keep='first')
+        #                     else:
+        #                         st.session_state.processed_df = st.session_state.processed_df.drop_duplicates(subset=dup_cols, keep='first')
+        #                     st.success(f"Removed {len(dups)} duplicate rows, keeping first occurrences!")
+                            
+        #                 elif dup_action == "Remove duplicates (keep last)":
+        #                     if not dup_cols:
+        #                         st.session_state.processed_df = st.session_state.processed_df.drop_duplicates(keep='last')
+        #                     else:
+        #                         st.session_state.processed_df = st.session_state.processed_df.drop_duplicates(subset=dup_cols, keep='last')
+        #                     st.success(f"Removed {len(dups)} duplicate rows, keeping last occurrences!")
+                            
+        #                 elif dup_action == "Remove all instances of duplicates":
+        #                     if not dup_cols:
+        #                         # Get all duplicated values
+        #                         dup_mask = st.session_state.processed_df.duplicated(keep=False)
+        #                         st.session_state.processed_df = st.session_state.processed_df[~dup_mask]
+        #                     else:
+        #                         # For specific columns
+        #                         dup_rows = st.session_state.processed_df[dup_cols].duplicated(keep=False)
+        #                         st.session_state.processed_df = st.session_state.processed_df[~dup_rows]
+        #                     st.success("Removed all instances of duplicate rows!")
+                            
+        #                 elif dup_action == "View duplicates only":
+        #                     st.session_state.processed_df = dups
+        #                     st.success("Showing only duplicate rows!")
+        #         else:
+        #             st.success("No duplicate rows found!")
+        
         # Tab 5: Duplicates
         with tab5:
             st.header("Duplicate Handling")
-            
+
             # Check for duplicates
             st.subheader("Duplicate Rows Analysis")
-            
+
             # Select columns to consider for duplicates
             dup_cols = st.multiselect(
                 "Select columns to check for duplicates (leave empty to check all columns)",
                 options=st.session_state.processed_df.columns,
                 default=[]
             )
-            
+
+            # Initialize session state variables if they don't exist
+            if 'duplicate_rows' not in st.session_state:
+                st.session_state.duplicate_rows = pd.DataFrame()
+            if 'duplicate_columns' not in st.session_state:
+                st.session_state.duplicate_columns = []
+
             if st.button("Find Duplicates"):
                 if not dup_cols:
                     dup_mask = st.session_state.processed_df.duplicated(keep='first')
@@ -460,58 +537,314 @@ def show_data_processing():
                 else:
                     dup_mask = st.session_state.processed_df.duplicated(subset=dup_cols, keep='first')
                     dups = st.session_state.processed_df[dup_mask]
-                
+
                 # Store duplicates in session state for later use
                 st.session_state.duplicate_rows = dups
                 st.session_state.duplicate_columns = dup_cols
-                
-                if len(dups) > 0:
-                    st.warning(f"Found {len(dups)} duplicate rows!")
-                    st.dataframe(dups)
-                    
-                    # Actions for duplicates
-                    st.subheader("Handle Duplicates")
-                    
-                    dup_action = st.radio(
-                        "What would you like to do with duplicates?",
-                        ["Remove duplicates (keep first)", "Remove duplicates (keep last)", 
-                         "Remove all instances of duplicates", "View duplicates only"]
-                    )
-                    
-                    if st.button("Apply Duplicate Action"):
-                        if dup_action == "Remove duplicates (keep first)":
-                            if not dup_cols:
-                                st.session_state.processed_df = st.session_state.processed_df.drop_duplicates(keep='first')
-                            else:
-                                st.session_state.processed_df = st.session_state.processed_df.drop_duplicates(subset=dup_cols, keep='first')
-                            st.success(f"Removed {len(dups)} duplicate rows, keeping first occurrences!")
-                            
-                        elif dup_action == "Remove duplicates (keep last)":
-                            if not dup_cols:
-                                st.session_state.processed_df = st.session_state.processed_df.drop_duplicates(keep='last')
-                            else:
-                                st.session_state.processed_df = st.session_state.processed_df.drop_duplicates(subset=dup_cols, keep='last')
-                            st.success(f"Removed {len(dups)} duplicate rows, keeping last occurrences!")
-                            
-                        elif dup_action == "Remove all instances of duplicates":
-                            if not dup_cols:
-                                # Get all duplicated values
-                                dup_mask = st.session_state.processed_df.duplicated(keep=False)
-                                st.session_state.processed_df = st.session_state.processed_df[~dup_mask]
-                            else:
-                                # For specific columns
-                                dup_rows = st.session_state.processed_df[dup_cols].duplicated(keep=False)
-                                st.session_state.processed_df = st.session_state.processed_df[~dup_rows]
-                            st.success("Removed all instances of duplicate rows!")
-                            
-                        elif dup_action == "View duplicates only":
-                            st.session_state.processed_df = dups
-                            st.success("Showing only duplicate rows!")
-                else:
+
+            # Always show duplicate results if we have them (outside of the button click block)
+            if not st.session_state.duplicate_rows.empty:
+                st.warning(f"Found {len(st.session_state.duplicate_rows)} duplicate rows!")
+                st.dataframe(st.session_state.duplicate_rows)
+
+                # Actions for duplicates
+                st.subheader("Handle Duplicates")
+
+                dup_action = st.radio(
+                    "What would you like to do with duplicates?",
+                    ["Remove duplicates (keep first)", "Remove duplicates (keep last)", 
+                     "Remove all instances of duplicates", "View duplicates only"]
+                )
+
+                if st.button("Apply Duplicate Action"):
+                    # Use the stored duplicate columns from session state
+                    dup_cols = st.session_state.duplicate_columns
+
+                    if dup_action == "Remove duplicates (keep first)":
+                        if not dup_cols:
+                            st.session_state.processed_df = st.session_state.processed_df.drop_duplicates(keep='first')
+                        else:
+                            st.session_state.processed_df = st.session_state.processed_df.drop_duplicates(subset=dup_cols, keep='first')
+                        st.success(f"Removed {len(st.session_state.duplicate_rows)} duplicate rows, keeping first occurrences!")
+
+                    elif dup_action == "Remove duplicates (keep last)":
+                        if not dup_cols:
+                            st.session_state.processed_df = st.session_state.processed_df.drop_duplicates(keep='last')
+                        else:
+                            st.session_state.processed_df = st.session_state.processed_df.drop_duplicates(subset=dup_cols, keep='last')
+                        st.success(f"Removed {len(st.session_state.duplicate_rows)} duplicate rows, keeping last occurrences!")
+
+                    elif dup_action == "Remove all instances of duplicates":
+                        if not dup_cols:
+                            # Get all duplicated values
+                            dup_mask = st.session_state.processed_df.duplicated(keep=False)
+                            st.session_state.processed_df = st.session_state.processed_df[~dup_mask]
+                        else:
+                            # For specific columns - this is the fix
+                            dup_mask = st.session_state.processed_df.duplicated(subset=dup_cols, keep=False)
+                            st.session_state.processed_df = st.session_state.processed_df[~dup_mask]
+                        st.success("Removed all instances of duplicate rows!")
+
+                    elif dup_action == "View duplicates only":
+                        st.session_state.processed_df = st.session_state.duplicate_rows
+                        st.success("Showing only duplicate rows!")
+
+                    # Clear the duplicates after action is applied
+                    st.session_state.duplicate_rows = pd.DataFrame()
+            else:
+                if 'duplicate_rows' in st.session_state and st.session_state.duplicate_rows.empty:
                     st.success("No duplicate rows found!")
-        
-        # Tab 6: Data Transformation
+
+
+        # Tab 6: Outliers
         with tab6:
+            st.header("Outlier Detection and Handling")
+        
+            # Get numeric columns for outlier detection
+            numeric_cols = st.session_state.processed_df.select_dtypes(include=['number']).columns.tolist()
+        
+            if not numeric_cols:
+                st.warning("No numeric columns found for outlier detection.")
+            else:
+                # Select columns for outlier detection
+                selected_cols = st.multiselect(
+                    "Select numeric columns to check for outliers",
+                    options=numeric_cols,
+                    default=numeric_cols[:1] if numeric_cols else []
+                )
+        
+                if selected_cols:
+                    # Method for outlier detection
+                    detection_method = st.radio(
+                        "Select outlier detection method",
+                        ["Z-Score", "IQR (Interquartile Range)", "Percentile"]
+                    )
+        
+                    # Parameters based on method
+                    threshold = None
+                    lower_percentile = 1.0
+                    upper_percentile = 99.0
+                    
+                    if detection_method == "Z-Score":
+                        threshold = st.slider("Z-Score threshold", 1.0, 5.0, 3.0, 0.1,
+                                              help="Values with absolute Z-scores above this threshold will be considered outliers")
+                    elif detection_method == "IQR":
+                        threshold = st.slider("IQR multiplier", 1.0, 3.0, 1.5, 0.1,
+                                             help="Values outside Q1 - (multiplier × IQR) and Q3 + (multiplier × IQR) will be considered outliers")
+                    elif detection_method == "Percentile":
+                        lower_percentile = st.slider("Lower percentile", 0.0, 10.0, 1.0, 0.5)
+                        upper_percentile = st.slider("Upper percentile", 90.0, 100.0, 99.0, 0.5)
+        
+                    # Button to detect outliers
+                    if st.button("Detect Outliers"):
+                        # Initialize dictionary to store outlier information
+                        outlier_info = {}
+        
+                        for col in selected_cols:
+                            data = st.session_state.processed_df[col].dropna()
+                            
+                            # Initialize outliers as an empty Series with the same index as data
+                            outliers = pd.Series(dtype=data.dtype)
+                            
+                            if len(data) > 0:  # Check if there's data to analyze
+                                if detection_method == "Z-Score":
+                                    mean = data.mean()
+                                    std = data.std()
+                                    if std > 0:  # Prevent division by zero
+                                        z_scores = (data - mean) / std
+                                        outliers = data[abs(z_scores) > threshold]
+                                    else:
+                                        st.warning(f"Column {col} has zero standard deviation, skipping Z-Score calculation.")
+                                        
+                                elif detection_method == "IQR":
+                                    Q1 = data.quantile(0.25)
+                                    Q3 = data.quantile(0.75)
+                                    IQR = Q3 - Q1
+                                    lower_bound = Q1 - threshold * IQR
+                                    upper_bound = Q3 + threshold * IQR
+                                    outliers = data[(data < lower_bound) | (data > upper_bound)]
+        
+                                elif detection_method == "Percentile":
+                                    lower_bound = data.quantile(lower_percentile / 100)
+                                    upper_bound = data.quantile(upper_percentile / 100)
+                                    outliers = data[(data < lower_bound) | (data > upper_bound)]
+        
+                            # Store outlier indices and values
+                            outlier_indices = outliers.index.tolist()
+                            outlier_values = outliers.values.tolist()
+        
+                            outlier_info[col] = {
+                                'indices': outlier_indices,
+                                'values': outlier_values,
+                                'count': len(outliers),
+                                'percentage': len(outliers) / len(data) * 100 if len(data) > 0 else 0
+                            }
+        
+                        # Store the outlier information in session state
+                        st.session_state.outlier_info = outlier_info
+        
+                        # Display outlier summary
+                        st.subheader("Outlier Summary")
+                        summary_data = {
+                            'Column': [],
+                            'Total Outliers': [],
+                            'Outlier %': [],
+                            'Min Value': [],
+                            'Max Value': []
+                        }
+        
+                        for col, info in outlier_info.items():
+                            summary_data['Column'].append(col)
+                            summary_data['Total Outliers'].append(info['count'])
+                            summary_data['Outlier %'].append(f"{info['percentage']:.2f}%")
+                            if info['values']:
+                                summary_data['Min Value'].append(min(info['values']))
+                                summary_data['Max Value'].append(max(info['values']))
+                            else:
+                                summary_data['Min Value'].append(None)
+                                summary_data['Max Value'].append(None)
+        
+                        summary_df = pd.DataFrame(summary_data)
+                        st.dataframe(summary_df)
+        
+                        # Visualize outliers
+                        if any(info['count'] > 0 for info in outlier_info.values()):
+                            st.subheader("Outlier Visualization")
+        
+                            for col in selected_cols:
+                                if outlier_info[col]['count'] > 0:
+                                    st.write(f"**Column: {col}**")
+        
+                                    fig, ax = plt.subplots(1, 2, figsize=(12, 4))
+        
+                                    # Boxplot
+                                    sns.boxplot(x=st.session_state.processed_df[col], ax=ax[0])
+                                    ax[0].set_title(f"Boxplot for {col}")
+        
+                                    # Histogram with KDE
+                                    sns.histplot(st.session_state.processed_df[col], kde=True, ax=ax[1])
+                                    ax[1].set_title(f"Distribution of {col}")
+        
+                                    # Mark outliers
+                                    if detection_method == "Z-Score":
+                                        mean = st.session_state.processed_df[col].mean()
+                                        std = st.session_state.processed_df[col].std()
+                                        if std > 0:  # Prevent division by zero
+                                            lower_bound = mean - threshold * std
+                                            upper_bound = mean + threshold * std
+                                            ax[1].axvline(lower_bound, color='r', linestyle='--')
+                                            ax[1].axvline(upper_bound, color='r', linestyle='--')
+        
+                                    elif detection_method == "IQR":
+                                        Q1 = st.session_state.processed_df[col].quantile(0.25)
+                                        Q3 = st.session_state.processed_df[col].quantile(0.75)
+                                        IQR = Q3 - Q1
+                                        lower_bound = Q1 - threshold * IQR
+                                        upper_bound = Q3 + threshold * IQR
+                                        ax[1].axvline(lower_bound, color='r', linestyle='--')
+                                        ax[1].axvline(upper_bound, color='r', linestyle='--')
+        
+                                    elif detection_method == "Percentile":
+                                        lower_bound = st.session_state.processed_df[col].quantile(lower_percentile / 100)
+                                        upper_bound = st.session_state.processed_df[col].quantile(upper_percentile / 100)
+                                        ax[1].axvline(lower_bound, color='r', linestyle='--')
+                                        ax[1].axvline(upper_bound, color='r', linestyle='--')
+        
+                                    st.pyplot(fig)
+        
+                            # Handle outliers section
+                            st.subheader("Handle Outliers")
+        
+                            handling_method = st.radio(
+                                "Select method to handle outliers",
+                                ["Remove outliers", "Cap outliers", "Replace with mean/median", "Do nothing"]
+                            )
+        
+                            if handling_method != "Do nothing":
+                                if st.button("Apply Outlier Treatment"):
+                                    df_copy = st.session_state.processed_df.copy()
+        
+                                    for col, info in outlier_info.items():
+                                        if info['count'] > 0:
+                                            if handling_method == "Remove outliers":
+                                                df_copy = df_copy.drop(index=info['indices'])
+        
+                                            elif handling_method == "Cap outliers":
+                                                # Calculate bounds based on detection method
+                                                if detection_method == "Z-Score":
+                                                    mean = df_copy[col].mean()
+                                                    std = df_copy[col].std()
+                                                    if std > 0:  # Prevent division by zero
+                                                        lower_bound = mean - threshold * std
+                                                        upper_bound = mean + threshold * std
+                                                        # Cap values
+                                                        df_copy.loc[df_copy[col] < lower_bound, col] = lower_bound
+                                                        df_copy.loc[df_copy[col] > upper_bound, col] = upper_bound
+                                                elif detection_method == "IQR":
+                                                    Q1 = df_copy[col].quantile(0.25)
+                                                    Q3 = df_copy[col].quantile(0.75)
+                                                    IQR = Q3 - Q1
+                                                    lower_bound = Q1 - threshold * IQR
+                                                    upper_bound = Q3 + threshold * IQR
+                                                    # Cap values
+                                                    df_copy.loc[df_copy[col] < lower_bound, col] = lower_bound
+                                                    df_copy.loc[df_copy[col] > upper_bound, col] = upper_bound
+                                                elif detection_method == "Percentile":
+                                                    lower_bound = df_copy[col].quantile(lower_percentile / 100)
+                                                    upper_bound = df_copy[col].quantile(upper_percentile / 100)
+                                                    # Cap values
+                                                    df_copy.loc[df_copy[col] < lower_bound, col] = lower_bound
+                                                    df_copy.loc[df_copy[col] > upper_bound, col] = upper_bound
+        
+                                            elif handling_method == "Replace with mean/median":
+                                                replacement_stat = st.radio(
+                                                    f"Replace outliers in {col} with:",
+                                                    ["Mean", "Median"],
+                                                    key=f"replace_stat_{col}"
+                                                )
+        
+                                                # Get indices of outliers
+                                                outlier_mask = pd.Series(False, index=df_copy.index)
+                                                
+                                                if detection_method == "Z-Score":
+                                                    mean = df_copy[col].mean()
+                                                    std = df_copy[col].std()
+                                                    if std > 0:  # Prevent division by zero
+                                                        z_scores = (df_copy[col] - mean) / std
+                                                        outlier_mask = abs(z_scores) > threshold
+                                                elif detection_method == "IQR":
+                                                    Q1 = df_copy[col].quantile(0.25)
+                                                    Q3 = df_copy[col].quantile(0.75)
+                                                    IQR = Q3 - Q1
+                                                    lower_bound = Q1 - threshold * IQR
+                                                    upper_bound = Q3 + threshold * IQR
+                                                    outlier_mask = (df_copy[col] < lower_bound) | (df_copy[col] > upper_bound)
+                                                elif detection_method == "Percentile":
+                                                    lower_bound = df_copy[col].quantile(lower_percentile / 100)
+                                                    upper_bound = df_copy[col].quantile(upper_percentile / 100)
+                                                    outlier_mask = (df_copy[col] < lower_bound) | (df_copy[col] > upper_bound)
+        
+                                                # Calculate replacement value
+                                                if replacement_stat == "Mean":
+                                                    # Using the mean of non-outlier values
+                                                    replacement_value = df_copy.loc[~outlier_mask, col].mean()
+                                                else:
+                                                    # Using the median of non-outlier values
+                                                    replacement_value = df_copy.loc[~outlier_mask, col].median()
+        
+                                                # Replace outliers
+                                                df_copy.loc[outlier_mask, col] = replacement_value
+        
+                                    # Update processed dataframe
+                                    st.session_state.processed_df = df_copy
+                                    st.success(f"Applied {handling_method} to outliers in selected columns!")
+        
+                                    # Clear outlier information after handling
+                                    st.session_state.outlier_info = {}
+                        else:
+                            st.success("No outliers found in the selected columns!")
+        # Tab 7: Data Transformation
+        with tab7:
             st.header("Data Transformation")
             
             # Separate into subtabs
@@ -746,8 +1079,8 @@ def show_data_processing():
                 else:
                     st.warning("No numeric columns found in your data!")
         
-        # Tab 7: Download
-        with tab7:
+        # Tab 8: Download
+        with tab8:
             st.header("Download Processed Data")
             
             # Display final data preview
@@ -941,3 +1274,4 @@ def show_data_processing():
 
 
 
+show_data_processing()
