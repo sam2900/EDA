@@ -7,7 +7,6 @@ from routes.modelling import show_modelling
 from routes.eda import show_testing
 from routes.about import show_about
 from kmcnew import kmc
-from dataPro import show_data_processing
 
 
 def main():
@@ -17,7 +16,7 @@ def main():
     st.title("Enablers of Confidence")
     
     # Sidebar navigation
-    activities = ["About","EDA", "Plot", "Model Building","Testing",'Data Processing']
+    activities = ["About","EDA", "Plot", "Model Building","Testing"]
     choice = st.sidebar.selectbox("Select Activity", activities)
     
     # Display the selected page
@@ -34,8 +33,6 @@ def main():
         show_about()
     elif choice == 'Testing':
         kmc()
-    elif choice == 'Data Processing':
-        show_data_processing()
 
 
         
