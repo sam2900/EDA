@@ -7,3 +7,4 @@ scikit-learn
 plotly
 openpyxl
 statsmodels
+k_means_constrained
