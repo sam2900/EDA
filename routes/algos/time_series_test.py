@@ -292,7 +292,7 @@ def time_series_forecasting():
                         # User selects forecast horizon
                         forecast_periods = st.slider(
                             "Select forecast horizon (periods)",
-                            1, 365, 120
+                            1, 365, 30
                         )
                         
                         # Generate forecast and get prediction intervals
